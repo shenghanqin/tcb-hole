@@ -1,0 +1,30 @@
+<view class="item">
+	<view class="item-author">
+		<image class="item-author-img" src="{{item.authorimg}}"></image>
+		<view class="item-author-name">{{item.authorname}}</view>
+	</view>
+	<view class="item-text" bindtap="todetail" data-item="{{item}}">
+		<text>{{item.content}}</text>
+	</view>
+    <view class="images">
+        <image class='image' mode="aspectFill" wx:for="{{item.image}}" wx:for-item="img" wx:key="index" src="{{img}}" bindtap="previewimg" data-url="{{img}}"></image>
+    </view>
+	<view class="item-info">
+		<view class="item-info-time">{{item.date}}</view>
+        <view class='item-info-delete' wx:if="{{item.authorimg==myimg&&comment.length==0}}" bindtap="removemain" data-item="{{item}}">删除</view>
+		<view>{{comment.length}}评论</view>
+	</view>
+</view>
+<textarea class='text' bindinput="gettext" placeholder="在这里写下你的评论" maxlength='-1' show-confirm-bar='false' value="{{text}}" auto-height/>
+<button class="comment-btn"  open-type="getUserInfo" bindgetuserinfo="comment">发表评论</button>
+
+<view class="item" wx:for="{{comment}}" wx:key="index">
+	<view class="item-text" bindtap="todetail" data-item="{{item}}" style="margin:0">
+		<text>{{item.content}}</text>
+	</view>
+	<view class="item-info">
+		<view class="item-info-time">{{item.authorname}}</view>
+        <view class='item-info-delete' wx:if="{{item.authorimg==myimg}}" bindtap="removeitem" data-item="{{item}}">删除</view>
+		<view>{{item.date}}</view>
+	</view>
+</view>

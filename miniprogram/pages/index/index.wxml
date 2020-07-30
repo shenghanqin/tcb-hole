@@ -1,0 +1,17 @@
+<view class="list">
+    <view class="item" wx:for="{{items}}" wx:key="index">
+        <view class="item-author">
+            <image class="item-author-img" src="{{item.authorimg}}"></image>
+            <view class="item-author-name">{{item.authorname}}</view>
+        </view>
+        <view class="item-text" bindtap="todetail" data-item="{{item}}">
+            <text>{{item.content}}</text>
+        </view>
+        <view class="item-info">
+            <view class="item-info-time">{{item.date}}</view>
+            <view>{{item.image.length==0?'无':item.image.length+'张'}}图片</view>
+        </view>
+    </view>
+    <view class="tips" type="default" wx:if="{{number>0}}">请在web管理上输入此号码：{{number}}</view>
+</view>
+<button class="add-btn" bindtap="toAdd">发表帖子</button>

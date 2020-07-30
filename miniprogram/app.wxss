@@ -1,0 +1,14 @@
+.add-btn{
+  position: fixed;
+  width: 100%;
+  bottom: 0;
+  height: 50px;
+  line-height: 50px;
+  font-size: 14px;
+  border-radius: 0;
+  background-color: #f3efec;
+  color: #6a5c4c;
+}
+button::after{
+  border: none;
+}

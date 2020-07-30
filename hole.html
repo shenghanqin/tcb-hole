@@ -1,0 +1,404 @@
+<html>
+
+<head>
+	<meta charset="utf-8">
+	<title>树洞</title>
+	<meta name="viewport"
+		content="width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=1,user-scalable=no" />
+	<script src="https://imgcache.qq.com/qcloud/tcbjs/1.10.6/tcb.js"></script>
+</head>
+
+<body>
+	<div class="top">
+		<div class="top-title">WEB云开发-树洞论坛</div>
+		<div class="top-login">
+			<input class="top-login-input" id="login-no" style="display: none;" placeholder="请填写授权码"></input>
+			<button class="top-login-btn" id="login-in" style="display: none;" onclick="getnumber()">登录</button>
+			<button class="top-login-btn" id="login-out" style="display: none;" onclick="loginout()">退出登录</button>
+		</div>
+	</div>
+	<div id="list"></div>
+	<div id="preview" style="display: none;" onclick="hidepreview()">
+		<img id="preview-img"></img>
+	</div>
+</body>
+<script>
+	const envId = '';//在此填写云开发环境ID
+	const app = tcb.init({
+		env: envId
+	});//初始化云开发
+	const auth = app.auth();//云开发鉴权对象，只需调用一次
+	let openid = null;//当前登录者的openid，游客为null
+	initTcb(() => {
+		loadlist();
+	});
+	//登录函数，主要根据用户码进行验证登录
+	//在这里主要为了练习使用匿名登录和自定义登录两种登录方式，匿名登录时没有帖子的删除功能。
+	function initTcb(success = () => {}) {
+		//判断地址参数是否存在
+		if (getQueryVariable('unumber') == false) {
+			//获取云开发用户登录状态
+			auth.getLoginState().then((e) => {
+				//如果没有登录状态，则匿名登录
+				if(e==null){
+					auth.signInAnonymously().then(() => {
+						auth.getLoginState().then((e) => {
+							console.log('匿名登录成功，初始化完成！');
+							document.getElementById('login-in').style = '';
+							document.getElementById('login-no').style = '';
+							success();
+						});
+					}).catch(err => {
+						console.log('初始化失败', err)
+					});
+				}
+				else{//如果有登录状态，取设置的hole_openid,是标准用户，非游客
+					console.log(e);
+					document.getElementById('login-out').style = '';
+					openid = window.localStorage.getItem('hole_openid');
+					loadlist();
+				}
+			});
+		} else {//如果设置了地址参数，则启用自定义登录
+			login();
+		}
+	}
+
+	/**
+	 * 获取输入的登录码，是4位数字 
+	 */
+	function getnumber() {
+		let number = document.getElementById('login-no').value;
+		//判断是否是4位以上
+		if (parseInt(number) > 1000) {
+			//跳转网址，带上参数重新进入本页面，用自定义登录
+			window.location.href = (window.location.href).replace(window.location.search, '') + '?unumber=' + number;
+		} else {
+			alert('用户码输入错误');
+		}
+	}
+
+	/**
+	 * 退出登录
+	 */
+	function loginout() {
+		//云开发退出登录
+		auth.signOut().then(() => {
+			//移除openid信息
+			window.localStorage.removeItem('hole_openid');
+			//重新定义无参数，刷新页面
+			window.location.href = (window.location.href).replace(window.location.search, '');
+		});
+	}
+
+	/**
+	 * 自定义登录，正式登录
+	 */
+	function login() {
+		//获取输入的验证码，从地址参数中
+		let number = getQueryVariable('unumber');
+		if (parseInt(number) > 1000) { //判断是否是4位以上数字
+			//根据数字进行验证，如果有用户码匹配，则返回ticket
+			calls({
+				url: `https://${envId}.service.tcloudbase.com/login`, //配置的Http触发云函数链接
+				data: {
+					number: number
+				},
+				success(res) {
+					//获取成功
+					console.log(res);
+					//如果数据库中登录数字存在，返回0并附带openid和登录ticket
+					if (res.code == 0) {
+						//使用ticket进行自定义登录
+						app.auth().signInWithTicket(res.ticket).then(sres => {
+							document.getElementById('login-out').style = '';
+							//将openid的信息保存起来，以备无参数刷新可得
+							window.localStorage.setItem('hole_openid',res.openid);
+							openid = res.openid;
+							loadlist();
+						});
+					} else {
+						loginout()
+					}
+				},
+				fail(e) {
+					console.log(e);
+				}
+			})
+		} else {
+			loginout();
+		}
+	}
+
+	//加载帖子列表，直接从数据库中读取
+	async function loadlist() {
+		const db = app.database();
+		db.collection('forum').get()
+			.then(async res => {
+				console.log(res);
+				let d_list = document.getElementById('list');
+				d_list.innerHTML = '';
+				for (let item of res.data) {
+					let d_item = document.createElement("div");
+					d_item.classList.add('item');
+					/** =========== item_author =========== **/
+					let d_item_author = document.createElement("div");
+					d_item_author.classList.add('item-author');
+
+					let d_item_author_img = document.createElement("img");
+					d_item_author_img.src = item.authorimg;
+					d_item_author_img.classList.add('item-author-img');
+					d_item_author.appendChild(d_item_author_img);
+
+					let d_item_author_name = document.createElement("div");
+					d_item_author_name.classList.add('item-author-name');
+					d_item_author_name.innerText = item.authorname;
+					d_item_author.appendChild(d_item_author_name);
+
+					d_item.appendChild(d_item_author);
+					/** =========== item_text =========== **/
+					let d_item_text = document.createElement("div");
+					d_item_text.classList.add('item-text');
+					d_item_text.innerHTML = `<p>${item.content}</p>`;
+
+					d_item.appendChild(d_item_text);
+					/** =========== item_images =========== **/
+					let d_item_images = document.createElement("div");
+					d_item_images.classList.add('images');
+
+					let url_img = await cloudtohttp(item.image);
+					for (let img of url_img) {
+						let temp_img = document.createElement("img");
+						temp_img.classList.add('image');
+					
+						temp_img.setAttribute('onclick', `preview('${img}')`);
+						temp_img.src = img;
+						d_item_images.appendChild(temp_img);
+					}
+					d_item.appendChild(d_item_images);
+					/** =========== item_info =========== **/
+					let d_item_info = document.createElement("div");
+					d_item_info.classList.add('item-info');
+
+					let d_item_info_time = document.createElement("div");
+					d_item_info_time.classList.add('item-info-time');
+					d_item_info_time.innerText = (item.date.toString()).replace('GMT+0800 (中国标准时间)', '');
+					d_item_info.appendChild(d_item_info_time);
+					console.log(openid, item._openid)
+
+					if (openid == item._openid) {
+						let d_item_info_delete = document.createElement("div");
+						d_item_info_delete.classList.add('item-info-delete');
+						d_item_info_delete.innerText = '删除';
+						d_item_info_delete.setAttribute('onclick', `removeitem('${item._id}')`);
+						d_item_info.appendChild(d_item_info_delete);
+					}
+					d_item.appendChild(d_item_info);
+
+					d_list.appendChild(d_item);
+				}
+			})
+	}
+
+	//移除一个自己的帖子
+	function removeitem(id) {
+		//调用的云函数removeitem
+		app.callFunction({
+				name: 'removeitem',
+				data: {
+					id: id
+				}
+			})
+			.then(res => {
+				console.log(res);
+				loadlist();
+			});
+	}
+	//工具：预览图片
+	function preview(url) {
+		document.getElementById('preview-img').src = url;
+		document.getElementById('preview').style = "";
+	}
+
+	function hidepreview() {
+		document.getElementById('preview').style = "display: none;";
+	}
+	//工具：文件cloud转url存储
+	function cloudtohttp(src) {
+		return new Promise((resolve, reject) => {
+			app.getTempFileURL({
+				fileList: src
+			}, function (err, res) {
+				let arr = res.fileList.map(item=>{
+					return item.tempFileURL;
+				})
+				resolve(arr);
+			});
+		});
+	}
+	//工具：get请求函数
+	function calls(obj) {
+		let xml = new XMLHttpRequest();
+		let url = obj.url + '?';
+		for (let item in obj.data) {
+			url += (item + '=' + obj.data[item] + '&');
+		}
+		xml.open('GET', url, true);
+		xml.send();
+		xml.onreadystatechange = function () {
+			if (xml.readyState === 4 && xml.status === 200) {
+				obj.success(JSON.parse(xml.responseText))
+			} else {
+				obj.fail(xml.status);
+			}
+		}
+	}
+	//工具：获得url参数
+	function getQueryVariable(variable) {
+		var query = window.location.search.substring(1);
+		var vars = query.split("&");
+		for (var i = 0; i < vars.length; i++) {
+			var pair = vars[i].split("=");
+			if (pair[0] == variable) {
+				return pair[1];
+			}
+		}
+		return (false);
+	}
+</script>
+<style>
+	body {
+		width: 100%;
+		height: 100%;
+		display: flex;
+		justify-content: center;
+		margin: 0;
+		background-color: #ece5d8;
+		flex-direction: column;
+	}
+
+	::-webkit-scrollbar {
+		display: none;
+	}
+
+	.top {
+		width: 100%;
+		max-width: 960px;
+		margin: 0 auto;
+	}
+
+	.top-title {
+		line-height: 80px;
+		font-size: 32px;
+		font-weight: bold;
+		max-width: 365px;
+		padding: 5px;
+		float: left;
+	}
+
+	.top-login {
+		display: flex;
+		width: 250px;
+		margin-top: 30px;
+		margin-left: auto;
+		margin-bottom: 10px;
+	}
+
+	.top-login-input {
+		height: 30px;
+		font-size: 14px;
+		border: none;
+		padding: 0 10px;
+		width: 150px;
+	}
+
+	.top-login-btn {
+		height: 30px;
+		border: none;
+		width: 100px;
+	}
+
+	#list {
+		width: 100%;
+		max-width: 960px;
+		height: 100%;
+		overflow: auto;
+		margin: auto;
+	}
+
+	#preview {
+		position: absolute;
+		width: 100%;
+		height: 100%;
+		background-color: rgba(0, 0, 0, 0.5);
+		display: flex;
+	}
+
+	#preview-img {
+		margin: auto;
+		object-fit: contain;
+		max-width: 100%;
+		max-height: 100%;
+	}
+
+	.item {
+		background-color: white;
+		width: calc(100% - 30px);
+		margin: 5px auto;
+		padding: 10px 15px;
+	}
+
+	.item-author {
+		display: flex;
+		color: #9b8878;
+	}
+
+	.item-author-img {
+		width: 30px;
+		height: 30px;
+	}
+
+	.item-author-name {
+		line-height: 30px;
+		font-size: 14px;
+		margin-left: 10px;
+		width: 100%;
+	}
+
+	.item-text {
+		font-size: 13px;
+		color: #503e2c;
+		margin: 10px auto;
+		line-height: 30px;
+	}
+
+	.item-info {
+		display: flex;
+		font-size: 14px;
+		color: #9b8878;
+	}
+
+	.item-info-time {
+		margin-right: auto;
+	}
+
+	.item-info-delete {
+		margin-right: 20px;
+		color: red;
+		cursor: pointer;
+	}
+
+	.images {
+		margin: 10px 0;
+		width: 100%;
+	}
+
+	.image {
+		height: 150px;
+		width: 150px;
+		overflow: hidden;
+		object-fit: cover;
+	}
+</style>
+
+</html>
