@@ -23,7 +23,7 @@
 	</div>
 </body>
 <script>
-	const envId = '';//在此填写云开发环境ID
+	const envId = 'development-9p1it';//在此填写云开发环境ID
 	const app = tcb.init({
 		env: envId
 	});//初始化云开发
@@ -204,7 +204,7 @@
 	function removeitem(id) {
 		//调用的云函数removeitem
 		app.callFunction({
-				name: 'removeitem',
+				name: 'hole-removeitem',
 				data: {
 					id: id
 				}

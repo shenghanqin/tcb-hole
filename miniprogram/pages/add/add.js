@@ -65,7 +65,7 @@ Page({
           mask: true
         })
         wx.cloud.callFunction({
-          name:'textsec',//云函数名称
+          name:'hole-textsec',//云函数名称
           data:{
             text:that.data.text//检测的文字
           },
@@ -128,7 +128,7 @@ Page({
     //TODO 图片安全检查
     return new Promise((resolve, reject)=>{
       wx.cloud.callFunction({
-        name:'imagesec',
+        name:'hole-imagesec',
         data:{
           img:fileID
         },

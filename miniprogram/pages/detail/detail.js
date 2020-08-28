@@ -61,7 +61,7 @@ Page({
         })
         //文字安全检查
         wx.cloud.callFunction({
-          name:'textsec',//云函数名称
+          name:'hole-textsec',//云函数名称
           data:{
             text:that.data.text//检测的文字
           },

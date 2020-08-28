@@ -1,0 +1,14 @@
+{
+  "envId": "development-9p1it",
+  "framework": {
+    "plugins": {
+      "static": {
+        "use": "@cloudbase/framework-plugin-website",
+        "inputs": {
+          "outputPath": "hole",
+          "cloudPath": "/hole"
+        }
+      }
+    }
+  }
+}

@@ -1,6 +1,7 @@
 App({
   onLaunch: function () {
     wx.cloud.init({
+      env: 'development-9p1it',
       traceUser: true
     });
   },
