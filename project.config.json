@@ -21,7 +21,6 @@
     "checkSiteMap": true,
     "uploadWithSourceMap": true,
     "compileHotReLoad": false,
-    "useMultiFrameRuntime": true,
     "babelSetting": {
       "ignore": [],
       "disablePlugins": [],
@@ -30,12 +29,13 @@
     "useIsolateContext": true,
     "useCompilerModule": true,
     "userConfirmedUseCompilerModuleSwitch": false,
+    "useMultiFrameRuntime": true,
     "packNpmManually": false,
     "packNpmRelationList": []
   },
   "compileType": "miniprogram",
   "libVersion": "2.4.0",
-  "appid": "",
+  "appid": "wxa9fd763cad459203",
   "projectname": "%E6%A0%91%E6%B4%9E%E5%B0%8F%E7%A8%8B%E5%BA%8F%E3%80%90%E4%BA%91%E5%BC%80%E5%8F%91%E6%A0%A1%E5%9B%AD%E5%B7%A5%E4%BD%9C%E5%9D%8A%E4%B8%93%E7%94%A8%E3%80%91",
   "debugOptions": {
     "hidedInDevtools": []
